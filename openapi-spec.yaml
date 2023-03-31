@@ -1,0 +1,583 @@
+openapi: 3.0.1
+info:
+  title: AniVerseAI API
+  version: 1.0.0
+servers:
+  - url: https://api.aniverseai.com
+    description: Production server
+  - url: https://staging-api.aniverseai.com
+    description: Staging server
+paths:
+  /auth/register:
+    post:
+      tags:
+        - Auth
+      operationId: registerUser
+      summary: Register a new user
+      requestBody: 
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserRegister'
+      responses:
+        '201':
+          description: User registered successfully
+        '400':
+          description: Invalid input
+  /auth/login:
+    post:
+      tags:
+        - Auth
+      operationId: loginUser
+      summary: Login a user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserLogin'
+      responses:
+        '200':
+          description: User logged in successfully
+        '400':
+          description: Invalid input
+  /auth/logout:
+    post:
+      tags:
+        - Auth
+      operationId: logoutUser
+      summary: Logout a user
+      responses:
+        '204':
+          description: User logged out successfully
+  /users/{id}:
+    get:
+      tags:
+        - User
+      operationId: getUser
+      summary: Get a user's profile
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: User profile retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '404':
+          description: User not found
+    put:
+      tags:
+        - User
+      operationId: updateUser
+      summary: Update a user's profile
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserUpdate'
+      responses:
+        '200':
+          description: User profile updated
+        '400':
+          description: Invalid input
+        '404':
+          description: User not found
+    delete:
+      tags:
+        - User
+      operationId: deleteUser
+      summary: Delete a user's profile
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: User profile deleted
+        '404':
+          description: User not found
+  /favorites/{userId}:
+    get:
+      tags:
+        - Favorites
+      operationId: getFavorite
+      summary: Get a user's favorites
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: User favorites retrieved
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Favorite'
+        '404':
+          description: User not found
+  /favorites:
+    post:
+      tags:
+        - Favorites
+      operationId: createFavorite
+      summary: Add a new favorite for a user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FavoriteCreate'
+      responses:
+        '201':
+          description: Favorite added
+        '400':
+          description: Invalid input
+  /favorites/{id}:
+    delete:
+      tags:
+        - Favorites
+      operationId: deleteFavorite
+      summary: Delete a favorite by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Favorite deleted
+        '404':
+          description: Favorite not found
+  /content:
+    get:
+      tags:
+        - Content
+      operationId: getContentList
+      parameters:
+        - in: query
+          name: type
+          schema:
+            $ref: '#/components/schemas/ContentTypeEnum'
+          description: The type of content to retrieve.
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+          description: Number of content items to return.
+        - in: query
+          name: offset
+          schema:
+            type: integer
+            default: 0
+          description: The offset for pagination.
+      responses:
+        '200':
+          description: A list of content items.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Content'
+  /content/{contentId}:
+    get:
+      tags:
+        - Content
+      operationId: getContentDetails
+      parameters:
+        - in: path
+          name: contentId
+          schema:
+            type: string
+          required: true
+          description: The ID of the content item.
+      responses:
+        '200':
+          description: Detailed information about a content item.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContentDetails'
+  /search:
+    get:
+      tags:
+        - Search
+      operationId: searchContent
+      parameters:
+        - in: query
+          name: query
+          schema:
+            type: string
+          required: true
+          description: The search query.
+        - in: query
+          name: type
+          schema:
+            $ref: '#/components/schemas/ContentTypeEnum'
+          description: The type of content to search.
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+          description: Number of search results to return.
+        - in: query
+          name: offset
+          schema:
+            type: integer
+            default: 0
+          description: The offset for pagination.
+      responses:
+        '200':
+          description: A list of search results.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Content'
+  /community:
+    get:
+      tags:
+        - Community
+      operationId: getCommunityPosts
+      summary: Get a list of community posts
+      parameters:
+        - name: type
+          in: query
+          schema:
+            $ref: '#/components/schemas/PostTypeEnum'
+          description: Filter posts by type
+        - name: content
+          in: query
+          schema:
+            $ref: '#/components/schemas/ContentTypeEnum'
+          description: Filter posts by content type
+        - name: page
+          in: query
+          schema:
+            type: integer
+          description: Page number for pagination
+        - name: limit
+          in: query
+          schema:
+            type: integer
+          description: Number of items per page
+      responses:
+        200:
+          description: A list of community posts
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CommunityPost'
+    post:
+      tags:
+        - Community
+      summary: Create a new community post
+      description: Add a new post to the community.
+      operationId: createCommunityPost
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CommunityPostCreate'
+      responses:
+        201:
+          description: Successfully created a new community post
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommunityPost'
+        400:
+          description: Invalid input, please check your request data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        401:
+          description: Unauthorized, please check your authentication
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /community/{postId}:
+    get:
+      tags:
+        - Community
+      operationId: getCommunityPostById
+      summary: Get a specific community post by ID
+      parameters:
+        - name: postId
+          in: path
+          schema:
+            type: string
+          required: true
+      responses:
+        200:
+          description: A community post
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommunityPost'
+    post:
+      tags:
+        - Community
+      operationId: addCommentToCommunityPost
+      summary: Add a new comment to a community post
+      parameters:
+        - name: postId
+          in: path
+          schema:
+            type: string
+          required: true
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Comment'
+      responses:
+        201:
+          description: Comment successfully added
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Comment'
+  /recommendations/{userId}:
+    get:
+      tags:
+        - Recommendations
+      operationId: getRecommendations
+      summary: Get recommendations for a user
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Recommendations retrieved
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Recommendation'
+        '404':
+          description: User not found
+components:
+  schemas:
+    PostTypeEnum:
+      type: string
+      enum: [discussion, content_sharing, recommendation_request]
+      description: Types of community posts
+    ContentTypeEnum:
+      type: string
+      enum: [anime, manga, game]
+      description: Types of content
+    UserLogin:
+      type: object
+      properties:
+        email:
+          type: string
+        password:
+          type: string
+    UserUpdate:
+      type: object
+      properties:
+        username:
+          type: string
+        email:
+          type: string
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "1"
+        username:
+          type: string
+          example: "john_doe"
+        email:
+          type: string
+          example: "john@example.com"
+        createdAt:
+          type: string
+          format: date-time
+          example: "2023-03-27T10:00:00Z"
+    UserRegister:
+      allOf:
+        - $ref: '#/components/schemas/User'
+        - type: object
+          properties:
+            password:
+              type: string
+              example: "password123"
+    FavoriteCreate:
+      type: object
+      properties:
+        userId:
+          type: string
+        title:
+          type: string
+        category:
+          type: string
+    Favorite:
+      type: object
+      properties:
+        id:
+          type: string
+        userId:
+          type: string
+        title:
+          type: string
+        category:
+          type: string
+    Recommendation:
+      type: object
+      properties:
+        id:
+          type: string
+        userId:
+          type: string
+        title:
+          type: string
+        category:
+          type: string
+    Content:
+      type: object
+      properties:
+        id:
+          type: string
+          description: The unique identifier of the content.
+        title:
+          type: string
+          description: The title of the content.
+        type:
+          $ref: '#/components/schemas/ContentTypeEnum'
+        imageUrl:
+          type: string
+          description: The URL of the image representing the content.
+    ContentDetails:
+      allOf:
+        - $ref: '#/components/schemas/Content'
+        - type: object
+          properties:
+            description:
+              type: string
+              description: The description of the content.
+            releaseDate:
+              type: string
+              format: date
+              description: The release date of the content.
+            genres:
+              type: array
+              items:
+                type: string
+              description: The genres of the content.
+            relatedContent:
+              type: array
+              items:
+                $ref: '#/components/schemas/Content'
+              description: Related content items.
+    CommunityPost:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Unique identifier for the community post
+        title:
+          type: string
+          description: Title of the community post
+        content:
+          type: string
+          description: Content of the community post
+        type:
+          $ref: '#/components/schemas/PostTypeEnum'
+        createdAt:
+          type: string
+          format: date-time
+          description: Timestamp when the post was created
+        author:
+          $ref: '#/components/schemas/User'
+        comments:
+          type: array
+          items:
+            $ref: '#/components/schemas/Comment'
+    CommunityPostCreate:
+      type: object
+      properties:
+        title:
+          type: string
+          description: The title of the community post
+        content:
+          type: string
+          description: The content of the community post
+      required:
+        - title
+        - content
+    Comment:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Unique identifier for the comment
+        content:
+          type: string
+          description: Content of the comment
+        createdAt:
+          type: string
+          format: date-time
+          description: Timestamp when the comment was created
+        author:
+          $ref: '#/components/schemas/User'
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-Api-Key
+security:
+  - ApiKeyAuth: []
+  - BearerAuth: []
